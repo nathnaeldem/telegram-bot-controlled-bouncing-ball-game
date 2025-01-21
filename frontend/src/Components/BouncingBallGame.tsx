@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import './BouncingBallGame.css';
+import React, { useEffect, useRef, useState } from "react";
+import "./BouncingBallGame.css";
 import { useInitData, useExpand } from "@vkruglikov/react-telegram-web-app";
-
 
 interface InitDataUnsafe {
   query_id: string;
@@ -9,7 +8,6 @@ interface InitDataUnsafe {
   auth_date: number;
   hash: string;
 }
-
 
 interface User {
   id: number;
@@ -19,9 +17,9 @@ interface User {
   language_code: string;
 }
 
-
 const BouncingBallGame: React.FC = () => {
- const [initDataUnsafe] = useInitData() as readonly [InitDataUnsafe | undefined, unknown];  const ballRef = useRef<HTMLDivElement | null>(null);
+  const [initDataUnsafe] = useInitData() as readonly [InitDataUnsafe | undefined, unknown];
+  const ballRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const floorRef = useRef<HTMLDivElement | null>(null);
   const infoRef = useRef<HTMLSpanElement | null>(null);
@@ -34,78 +32,83 @@ const BouncingBallGame: React.FC = () => {
 
   const [containerHeight, setContainerHeight] = useState(500); // Fallback value
   const [floorHeight, setFloorHeight] = useState(50); // Fallback value
-    const user = initDataUnsafe.user;
-  // Use expand for mini-apps
-  useExpand();
+
+  const user = initDataUnsafe?.user || { first_name: "Guest", username: "guest" }; // Fallback user for browsers
+  const [isExpanded, expand] = useExpand();
+
+  // Use expand for mini-apps in Telegram
+  useEffect(() => {
+    if (initDataUnsafe && !isExpanded) expand();
+  }, [initDataUnsafe, isExpanded, expand]);
 
   // WebSocket connection and message handling
   useEffect(() => {
-    const userAgent = "mozilla";  // Set your user-agent or pass dynamic user-agent
+    const userAgent = navigator.userAgent || "unknown"; // Set user-agent dynamically
     const wsUrl = `wss://gray-neighborly-plain.glitch.me/?user-agent=${encodeURIComponent(userAgent)}`;
-    
+
     wsRef.current = new WebSocket(wsUrl);
-  
+
     wsRef.current.onopen = () => {
       console.log("WebSocket connection established!");
     };
-  
+
     wsRef.current.onerror = (error) => {
       console.error("WebSocket error:", error);
     };
-  
+
     wsRef.current.onclose = () => {
       console.log("WebSocket connection closed");
     };
-  
+
     wsRef.current.onmessage = async (event) => {
       if (event.data instanceof Blob) {
         const text = await event.data.text();
         try {
           const message = JSON.parse(text);
           switch (message.command) {
-            case 'start':
+            case "start":
               setIsRunning(true);
               break;
-            case 'stop':
+            case "stop":
               setIsRunning(false);
               break;
-            case 'speedUp':
+            case "speedUp":
               setSpeed((prev) => prev + 1);
               break;
-            case 'slowDown':
+            case "slowDown":
               setSpeed((prev) => (prev > 1 ? prev - 1 : 1));
               break;
-            case 'reverse':
+            case "reverse":
               setDirection((prev) => -prev);
               break;
             default:
-              console.warn('Unknown command:', message.command);
+              console.warn("Unknown command:", message.command);
           }
         } catch (error) {
-          console.error('Failed to parse JSON:', error);
+          console.error("Failed to parse JSON:", error);
         }
-      } else if (event.data === 'pong') {
-        console.log('Received pong from server');
+      } else if (event.data === "pong") {
+        console.log("Received pong from server");
       } else {
-        console.warn('Unexpected WebSocket message type:', typeof event.data);
+        console.warn("Unexpected WebSocket message type:", typeof event.data);
       }
     };
-  
+
     // Ping the server every 30 seconds to keep the connection alive
     const interval = setInterval(() => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        console.log('Sending ping to server');
-        wsRef.current.send('ping');
+        console.log("Sending ping to server");
+        wsRef.current.send("ping");
       }
     }, 30000); // Ping every 30 seconds
-  
+
     // Clean up on component unmount
     return () => {
       clearInterval(interval);
       wsRef.current?.close();
     };
   }, []);
-  
+
   useEffect(() => {
     // Get dimensions dynamically
     const updateDimensions = () => {
@@ -117,9 +120,9 @@ const BouncingBallGame: React.FC = () => {
 
     // Update on load and resize
     updateDimensions();
-    window.addEventListener('resize', updateDimensions);
+    window.addEventListener("resize", updateDimensions);
 
-    return () => window.removeEventListener('resize', updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
   useEffect(() => {
@@ -127,7 +130,10 @@ const BouncingBallGame: React.FC = () => {
 
     const interval = setInterval(() => {
       setY((prevY) => {
-        const floorPosition = containerHeight - floorHeight - (ballRef.current ? ballRef.current.offsetHeight : 50); // Dynamic ball size
+        const floorPosition =
+          containerHeight -
+          floorHeight -
+          (ballRef.current ? ballRef.current.offsetHeight : 50); // Dynamic ball size
         let newY = prevY + speed * direction;
 
         // Bounce off the bottom
@@ -155,7 +161,7 @@ const BouncingBallGame: React.FC = () => {
     }
 
     if (infoRef.current) {
-      infoRef.current.innerText = `Speed: ${speed}, Direction: ${direction > 0 ? 'Down' : 'Up'}`;
+      infoRef.current.innerText = `Speed: ${speed}, Direction: ${direction > 0 ? "Down" : "Up"}`;
     }
   }, [y, speed, direction]);
 
@@ -178,11 +184,10 @@ const BouncingBallGame: React.FC = () => {
 
   return (
     <div>
-     
       <div className="game-container" ref={containerRef}>
-      <div className="welcome-message">
-        <p>Welcome,{user.first_name}</p>
-      </div>
+        <div className="welcome-message">
+          <p>Welcome, {user.first_name}</p>
+        </div>
         <div className="ball" ref={ballRef}>
           <span className="info" ref={infoRef}>Info</span>
         </div>

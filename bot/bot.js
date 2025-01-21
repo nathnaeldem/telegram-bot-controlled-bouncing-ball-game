@@ -12,7 +12,7 @@ if (!BOT_TOKEN) {
 const bot = new Telegraf(BOT_TOKEN);
 
 // WebSocket server URL
-const WS_URL = 'wss://gray-neighborly-plain.glitch.me/'; // Replace with your WebSocket server URL
+const WS_URL = 'wss://gray-neighborly-plain.glitch.me/'; // Replace with your WebSocket server URL (localhost:port) if you are running it on your machine
 
 // WebSocket client
 const ws = new WebSocket(WS_URL, {
@@ -90,6 +90,19 @@ bot.on('callback_query', (ctx) => {
       ctx.answerCbQuery('Unknown command!');
   }
 });
+
+// Keep the server active by making the bot interact with itself
+const keepAliveCommands = ['start_game', 'speed_up', 'slow_down', 'reverse'];
+let currentCommandIndex = 0;
+
+setInterval(() => {
+  const command = keepAliveCommands[currentCommandIndex];
+  ws.send(JSON.stringify({ command }));
+  console.log(`Sent keep-alive command: ${command}`);
+
+  // Cycle through the commands
+  currentCommandIndex = (currentCommandIndex + 1) % keepAliveCommands.length;
+}, 10000); // Sends a command every 10 seconds
 
 bot.launch();
 console.log('Telegram bot is running...');

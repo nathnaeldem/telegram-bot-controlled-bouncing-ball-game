@@ -55,7 +55,7 @@ body {
 }
 
 .controls {
-  margin-top: 60px;
+  margin-top: 20px;
   display: flex;
   justify-content: center;
   gap: 10px;

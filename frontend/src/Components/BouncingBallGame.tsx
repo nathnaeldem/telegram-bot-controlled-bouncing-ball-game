@@ -44,7 +44,7 @@ const BouncingBallGame: React.FC = () => {
   // WebSocket connection and message handling
   useEffect(() => {
     const userAgent = navigator.userAgent || "unknown"; // Set user-agent dynamically
-    const wsUrl = `wss://gray-neighborly-plain.glitch.me/?user-agent=${encodeURIComponent(userAgent)}`;
+    const wsUrl = `wss://hill-knowing-fright.glitch.me/?user-agent=${encodeURIComponent(userAgent)}`;
 
     wsRef.current = new WebSocket(wsUrl);
 
@@ -185,14 +185,15 @@ const BouncingBallGame: React.FC = () => {
   return (
     <div>
       <div className="game-container" ref={containerRef}>
-        <div className="welcome-message">
-          <p>Welcome, {user.first_name}</p>
-        </div>
+        
         <div className="ball" ref={ballRef}>
           <span className="info" ref={infoRef}>Info</span>
         </div>
         <div className="floor" ref={floorRef}></div>
       </div>
+      <div className="welcome-message">
+          <p>Welcome, {user.first_name}</p>
+        </div>
       <div className="controls">
         <button onClick={startGame} className="control-button">
           <i className="fas fa-play"></i> Start
